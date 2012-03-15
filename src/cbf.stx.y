@@ -263,6 +263,7 @@ extern "C" {
 #include "cbf_tree.h"
 #include "cbf_alloc.h"
 #include "cbf_context.h"
+#include "cbf_tree.h"
 
 #define yyparse       cbf_parse
 #define yylex         cbf_lex_wrapper
@@ -286,6 +287,8 @@ typedef union
 
 #define YYINITDEPTH 200
 #define YYMAXDEPTH  200
+
+#include "cbf_stx.h"
 
 int cbf_lex (cbf_handle handle, YYSTYPE *val ); 
 
