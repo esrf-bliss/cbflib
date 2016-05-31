@@ -262,8 +262,7 @@ extern "C" {
 #include <string.h>
 #include <limits.h>
 #include <ctype.h>
-
-
+#include "md5.h"
 
   /* Create and initialise a file */
 
@@ -1219,7 +1218,7 @@ int cbf_start_digest (cbf_file *file)
     cbf_failnez (cbf_alloc ((void **)&vdigest,
                                        NULL, sizeof (MD5_CTX), 1))
                                        
-    file->digest = (MD5_CTX *)vdigest;
+    file->digest = (struct MD5_CTX *)vdigest;
                                        
   }
 

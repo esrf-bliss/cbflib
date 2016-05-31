@@ -258,11 +258,8 @@ extern "C" {
 
 #include <stdio.h>
 #include "global.h"
-#include "md5.h"
-
 
   /* File structure */
-
 typedef struct
 {
   FILE        *stream;            /* File pointer                           */
@@ -283,7 +280,7 @@ typedef struct
   int          read_headers;      /* message digest control (read)          */
   int          write_headers;     /* message digest and header type (write) */
   int          write_encoding;    /* encoding and line terminations (write) */
-  MD5_CTX     *digest;            /* message digest context                 */
+  void         *digest;     /* message digest context                 */
 }
 cbf_file;
 

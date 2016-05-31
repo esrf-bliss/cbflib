@@ -313,6 +313,7 @@ extern "C" {
 #include <string.h>
 #include <sys/stat.h>
 #include <wchar.h>
+#include "md5.h"
 
   /* Check a 24-character base-64 MD5 digest */
 
