@@ -824,14 +824,6 @@ $(JAVADIR):
 	mkdir $@
 
 #
-# Parser
-#
-$(SRC)/cbf_stx.c: $(SRC)/cbf.stx.y
-	bison $(SRC)/cbf.stx.y -o $(SRC)/cbf.stx.tab.c -d
-	mv $(SRC)/cbf.stx.tab.c $(SRC)/cbf_stx.c
-	mv $(SRC)/cbf.stx.tab.h $(INCLUDE)/cbf_stx.h
-
-#
 # CBF library
 #
 $(LIB)/libcbf.a: $(SOURCE) $(HEADERS) $(COMMONDEP) $(LIB)

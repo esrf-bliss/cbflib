@@ -26,7 +26,6 @@ examples/test_xds_binary.f90
 getopt-1.1.4_cbf/gnu/getopt.o
 getopt-1.1.4_cbf_build
 gpl.txt
-include/cbf_stx.h
 include/getopt.h
 index.html
 lgpl.txt
@@ -34,7 +33,6 @@ lib/getopt.o
 lib/libcbf.a
 lib/libfcb.a
 lib/libimg.a
-src/cbf_stx.c
 src/fcb_exit_binary.f90
 src/fcb_next_binary.f90
 src/fcb_open_cifin.f90
