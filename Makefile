@@ -275,7 +275,7 @@ MINICBF_TEST = $(ROOT)/minicbf_test
 GRAPHICS = $(ROOT)/html_graphics
 DATADIRI  = $(ROOT)/../CBFlib_$(VERSION)_Data_Files_Input
 DATADIRO  = $(ROOT)/../CBFlib_$(VERSION)_Data_Files_Output
-CBF_PREFIX  ?= $(HOME)
+CBF_PREFIX  ?= $(PREFIX)
 
 #
 # Comment out the next line if scratch test files should be retained
@@ -331,14 +331,6 @@ PY3PLY = ply-3.11
 PY3CIFRWFLAG = -DCBF_USE_PYCIFRW
 PY3CIFRW_PREFIX ?= $(HOME)/.local
 endif
-
-#
-# Definition to get a version of tifflib to support tiff2cbf
-#
-TIFF ?= tiff-4.0.6_rev_3Nov16
-TIFF_PREFIX ?= $(PWD)
-TIFF_INSTALL = $(TIFF)_INSTALL
-
 
 #
 # Definitions to get a version of HDF5
@@ -648,16 +640,16 @@ INSTALLSETUP_PY = installsetup.py
 #  Appropriate compiler definitions for default (Linux)
 #
 #########################################################
-CC	= gcc
-C++	= g++
+CC	?= gcc
+C++	= $(CXX)
 ifneq ($(CBFDEBUG),)
-CFLAGS  = -g -O0 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing -DCBFDEBUG=1  $(HDF5CFLAGS)
+CFLAGS  += -D_USE_XOPEN_EXTENDED -DCBFDEBUG=1 $(HDF5CFLAGS)
 else
-CFLAGS  = -g -O3 -Wall -D_USE_XOPEN_EXTENDED -fno-strict-aliasing  $(HDF5CFLAGS)
+CFLAGS  += -D_USE_XOPEN_EXTENDED $(HDF5CFLAGS)
 endif
 LDFLAGS =
-F90C = gfortran
-F90FLAGS = -g -fno-range-check -fallow-invalid-boz
+F90C = $(FC)
+F90FLAGS = $(FFLAGS) -fallow-invalid-boz
 F90LDFLAGS = 
 SOCFLAGS = -fPIC
 SOLDFLAGS = -shared -Wl,-rpath,$(CBF_PREFIX)/lib
@@ -1057,7 +1049,6 @@ all::	$(BIN) $(SOURCE) $(F90SOURCE) $(HEADERS) \
 	$(BIN)/testflatpacked \
 	$(BIN)/testhdf5       \
 	$(BIN_TESTULP)        \
-	$(BIN)/tiff2cbf       \
 	$(BIN)/test_cbf_airy_disk \
 	$(BIN)/cbf_testxfelread
 
@@ -1260,8 +1251,6 @@ baseinstall:  all $(CBF_PREFIX) $(CBF_PREFIX)/lib $(CBF_PREFIX)/bin \
 	cp $(BIN)/testflat $(CBF_PREFIX)/bin/testflat
 	-cp $(CBF_PREFIX)/bin/testflatpacked $(CBF_PREFIX)/bin/testflatpacked_old
 	cp $(BIN)/testflatpacked $(CBF_PREFIX)/bin/testflatpacked
-	-cp $(CBF_PREFIX)/bin/tiff2cbf $(CBF_PREFIX)/bin/tiff2cbf_old
-	cp $(BIN)/tiff2cbf $(CBF_PREFIX)/bin/tiff2cbf
 	-cp $(CBF_PREFIX)/bin/test_cbf_airy_disk $(CBF_PREFIX)/bin/test_cbf_airy_disk_old
 	cp $(BIN)/test_cbf_airy_disk $(CBF_PREFIX)/bin/test_cbf_airy_disk
 	-cp $(CBF_PREFIX)/bin/test_cbf_airy_disk $(CBF_PREFIX)/bin/test_cbf_airy_disk_old
@@ -1312,7 +1301,6 @@ endif
 ifneq ($(CBF_USE_ULP),)
 	chmod 755 $(CBF_PREFIX)/bin/testulp
 endif
-	chmod 755 $(CBF_PREFIX)/bin/tiff2cbf
 	chmod 755 $(CBF_PREFIX)/bin/test_cbf_airy_disk
 	chmod 755 $(CBF_PREFIX)/bin/batch_convert_minicbf.sh
 	chmod 644 $(CBF_PREFIX)/include/cbflib/*.h
@@ -1432,9 +1420,11 @@ $(REGEX)_INSTALL:   $(REGEX)
 	make distclean; ./configure --prefix=$(CBF_PREFIX); make install )
 	@-cp $(CBF_PREFIX)/include/pcreposix.h $(CBF_PREFIX)/include/regex.h
 
+ifneq ($(CBFLIB_DONT_USE_LOCAL_TIFF),yes)
 #
 # TIFF
 #
+
 build_tiff:	$(M4)/Makefile.m4
 	touch build_tiff
 $(TIFF):	build_tiff config.guess config.sub
@@ -1452,7 +1442,7 @@ $(TIFF)_INSTALL:    $(TIFF)
 	rsync -avz $(TIFF)/  $(TIFF)_install
 	(cd $(TIFF)_install; make distclean; prefix=$(CBF_PREFIX); export prefix; \
 	./configure --prefix=$(CBF_PREFIX); make install)
-
+endif
 
 ifneq ($(CBFLIB_DONT_USE_LOCAL_HDF5),yes)
 #
@@ -2055,17 +2045,6 @@ $(BIN)/sequence_match: $(LIB)/libcbf.a $(EXAMPLES)/sequence_match.c $(LIB)/libim
 	$(EXAMPLES)/sequence_match.c $(GOPTLIB) -L$(LIB) \
 	-lcbf $(REGEX_LIBS_STATIC) $(HDF5LIBS_LOCAL) $(EXTRALIBS) $(HDF5LIBS_SYSTEM) -limg -o $@
 
-#
-# tiff2cbf example program
-#
-$(BIN)/tiff2cbf: $(LIB)/libcbf.a $(EXAMPLES)/tiff2cbf.c $(EXAMPLES)/tif_sprint.c \
-	$(GOPTLIB)	$(GOPTINC) $(TIFF)
-	mkdir -p $(BIN)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(MISCFLAG) $(CBF_REGEXFLAG) $(INCLUDES) $(WARNINGS) \
-	-I$(TIFF)/libtiff $(EXAMPLES)/tiff2cbf.c $(GOPTLIB) -L$(LIB) \
-	-lcbf -L$(TIFF_PREFIX)/lib -ltiff $(REGEX_LIBS_STATIC) $(HDF5LIBS_LOCAL) $(EXTRALIBS) $(HDF5LIBS_SYSTEM) -limg -o $@
-
-#
 # Andy Arvai's buffered read test program
 #
 $(BIN)/arvai_test: $(LIB)/libcbf.a $(EXAMPLES)/arvai_test.c $(LIB)/libimg.a \
@@ -2492,7 +2471,7 @@ extra:	$(BIN)/convert_image $(BIN)/convert_minicbf $(BIN)/cif2cbf \
 	$(BIN)/testreals $(BIN)/testflat $(BIN)/testflatpacked \
 	$(BIN)/test_xds_binary $(BIN)/test_fcb_read_image $(BIN)/convert_minicbf \
 	$(BIN)/sauter_test $(BIN)/adscimg2cbf $(BIN)/cbf2adscimg \
-	$(BIN)/changtestcompression $(BIN)/tiff2cbf \
+	$(BIN)/changtestcompression \
 	$(BIN)/testhdf5 $(BIN)/testalloc \
 	$(BIN_TESTULP) \
 	basic $(TESTINPUT_EXTRA) $(TESTOUTPUT) $(EXAMPLES)/batch_convert_minicbf.sh \
@@ -2646,8 +2625,6 @@ ifneq ($(F90C),)
 endif
 	$(LDPREFIX)  $(TIME) $(BIN)/sauter_test
 	$(LDPREFIX)  $(TIME) $(BIN)/changtestcompression
-	$(LDPREFIX)  $(TIME) $(BIN)/tiff2cbf XRD1621.tif XRD1621.cbf
-	-cat XRD1621_orig.cbf | sed "2,2s/0.9.6/0.9.7/" | diff -a - XRD1621.cbf
 	#-$(DIFF) XRD1621.cbf XRD1621_orig.cbf
 	$(LDPREFIX)  $(TIME) $(BIN)/cif2cbf -I 4 -C 100. -L 0. -e n -c b -i XRD1621.cbf -o XRD1621_I4encbC100.cbf
 	-cat XRD1621_I4encbC100_orig.cbf | sed "2,2s/0.9.6/0.9.7/" | diff -a - XRD1621_I4encbC100.cbf
@@ -2797,7 +2774,6 @@ empty:
 	@-rm -rf $(TIFF)_install
 	@-rm -rf $(HDF5)
 	@-rm -rf $(HDF5)_install
-	@-rm -rf $(INCLUDE)/tiff*
 	@-rm -rf $(INCLUDE)/H5*
 	@-rm -rf $(INCLUDE)/hdf5*
 	@-rm -rf share
@@ -2869,4 +2845,3 @@ tar:   $(DOCUMENTS) $(SOURCE) $(SRC)/cbf.stx $(HEADERS) $(M4FILES)\
 	README.html README Makefile \
 	$(JPEGS)
 	gzip --best CBFlib.tar
-
